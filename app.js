@@ -187,10 +187,13 @@ function getFollowUpContacts() {
 
 function buildStats() {
   const salesContacts = getSalesContacts();
-  const openDeals = salesContacts.filter((contact) =>
-    ["lead", "discovery", "proposal", "negotiation"].includes(contact.salesStage)
+  const opportunityContacts = salesContacts.filter((contact) =>
+    ["watchlist", "lead", "discovery", "proposal", "negotiation"].includes(contact.salesStage)
   );
-  const totalPipelineValue = openDeals.reduce((sum, contact) => sum + Number(contact.value || 0), 0);
+  const activePipelineDeals = salesContacts.filter((contact) =>
+    ["discovery", "proposal", "negotiation"].includes(contact.salesStage)
+  );
+  const totalPotentialValue = opportunityContacts.reduce((sum, contact) => sum + Number(contact.value || 0), 0);
   const wonValue = salesContacts
     .filter((contact) => contact.salesStage === "won")
     .reduce((sum, contact) => sum + Number(contact.value || 0), 0);
@@ -201,9 +204,9 @@ function buildStats() {
 
   return [
     {
-      label: "Money pipeline",
-      value: formatCurrency(totalPipelineValue),
-      detail: `${openDeals.length} open sales conversations`,
+      label: "Potential value",
+      value: formatCurrency(totalPotentialValue),
+      detail: `${activePipelineDeals.length} active sales conversations`,
     },
     {
       label: "Due today or overdue",
@@ -332,7 +335,10 @@ function renderTable() {
 }
 
 function renderPipeline() {
-  const columns = state.options.salesStages
+  const pipelineStages = state.options.salesStages.filter(
+    (stage) => !["watchlist", "lead"].includes(stage.value)
+  );
+  const columns = pipelineStages
     .map((stage) => {
       const contacts = getSalesContacts().filter((contact) => contact.salesStage === stage.value);
       const total = contacts.reduce((sum, contact) => sum + Number(contact.value || 0), 0);
@@ -441,7 +447,7 @@ function resetForm() {
   elements.relationshipTypeInput.value = "prospect";
   elements.relationshipStatusInput.value = "warm";
   elements.salesTrackInput.checked = true;
-  elements.salesStageInput.value = "lead";
+  elements.salesStageInput.value = "watchlist";
   elements.priorityInput.value = "medium";
   syncSalesFieldVisibility();
 }
@@ -458,7 +464,7 @@ function populateForm(contact) {
   elements.relationshipTypeInput.value = contact.relationshipType;
   elements.relationshipStatusInput.value = contact.relationshipStatus;
   elements.salesTrackInput.checked = contact.isSales;
-  elements.salesStageInput.value = contact.salesStage || "lead";
+  elements.salesStageInput.value = contact.salesStage || "watchlist";
   elements.valueInput.value = contact.value || "";
   elements.priorityInput.value = contact.priority;
   elements.lastContactInput.value = contact.lastContact || "";
@@ -699,6 +705,9 @@ function bindEvents() {
     }
     if (event.target.value === "customer" && elements.salesTrackInput.checked) {
       elements.salesStageInput.value = "won";
+    }
+    if (event.target.value === "prospect" && elements.salesTrackInput.checked && !elements.salesStageInput.value) {
+      elements.salesStageInput.value = "watchlist";
     }
     syncSalesFieldVisibility();
   });

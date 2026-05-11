@@ -38,6 +38,7 @@ RELATIONSHIP_STATUS = [
 ]
 
 SALES_STAGES = [
+    ("watchlist", "Watching"),
     ("lead", "New lead"),
     ("discovery", "Discovery"),
     ("proposal", "Proposal sent"),
@@ -65,7 +66,7 @@ SAMPLE_CONTACTS = [
         "relationshipType": "prospect",
         "relationshipStatus": "active",
         "isSales": True,
-        "salesStage": "proposal",
+        "salesStage": "discovery",
         "value": 6500,
         "priority": "high",
         "lastContact": "2026-05-08",
@@ -82,7 +83,7 @@ SAMPLE_CONTACTS = [
         "relationshipType": "prospect",
         "relationshipStatus": "warm",
         "isSales": True,
-        "salesStage": "discovery",
+        "salesStage": "watchlist",
         "value": 4200,
         "priority": "high",
         "lastContact": "2026-05-06",
@@ -99,7 +100,7 @@ SAMPLE_CONTACTS = [
         "relationshipType": "prospect",
         "relationshipStatus": "new",
         "isSales": True,
-        "salesStage": "lead",
+        "salesStage": "watchlist",
         "value": 2400,
         "priority": "medium",
         "lastContact": "2026-05-04",

@@ -283,6 +283,11 @@ th:last-child {
   color: var(--blue);
 }
 
+.tag.watchlist {
+  background: rgba(102, 112, 133, 0.14);
+  color: var(--muted);
+}
+
 .tag.discovery {
   background: rgba(29, 107, 87, 0.12);
   color: var(--green);
