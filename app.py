@@ -6,7 +6,6 @@ import os
 import secrets
 import sqlite3
 import threading
-from datetime import date
 from http import HTTPStatus
 from http.cookies import SimpleCookie
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -56,129 +55,6 @@ PRIORITIES = [
 SESSIONS: dict[str, dict[str, str]] = {}
 SESSIONS_LOCK = threading.Lock()
 
-SAMPLE_CONTACTS = [
-    {
-        "name": "Maya Chen",
-        "company": "Northstar Studio",
-        "email": "maya@northstarstudio.co",
-        "phone": "+44 7700 900123",
-        "source": "Referral",
-        "relationshipType": "prospect",
-        "relationshipStatus": "active",
-        "isSales": True,
-        "salesStage": "discovery",
-        "value": 6500,
-        "priority": "high",
-        "lastContact": "2026-05-08",
-        "nextFollowUp": "2026-05-13",
-        "nextAction": "Send revised proposal with workshop scope",
-        "notes": "Warm intro via Hannah. Wants a 6-week narrative sprint and homepage rewrite.",
-    },
-    {
-        "name": "Leo Foster",
-        "company": "Signal Peak",
-        "email": "leo@signalpeak.ai",
-        "phone": "+44 7700 900456",
-        "source": "LinkedIn",
-        "relationshipType": "prospect",
-        "relationshipStatus": "warm",
-        "isSales": True,
-        "salesStage": "watchlist",
-        "value": 4200,
-        "priority": "high",
-        "lastContact": "2026-05-06",
-        "nextFollowUp": "2026-05-12",
-        "nextAction": "Check whether board sign-off came through",
-        "notes": "Interested in visibility audit. Needs board sign-off before moving to proposal.",
-    },
-    {
-        "name": "Imani Rivers",
-        "company": "Canvas Health",
-        "email": "imani@canvashealth.com",
-        "phone": "+1 415 555 0107",
-        "source": "Website",
-        "relationshipType": "prospect",
-        "relationshipStatus": "new",
-        "isSales": True,
-        "salesStage": "watchlist",
-        "value": 2400,
-        "priority": "medium",
-        "lastContact": "2026-05-04",
-        "nextFollowUp": str(date.today()),
-        "nextAction": "Reply with starter package and booking link",
-        "notes": "Downloaded report and asked for pricing. Good fit for light advisory package.",
-    },
-    {
-        "name": "Tom Alvarez",
-        "company": "Fieldnote Labs",
-        "email": "tom@fieldnotelabs.io",
-        "phone": "+1 415 555 0148",
-        "source": "Podcast",
-        "relationshipType": "customer",
-        "relationshipStatus": "active",
-        "isSales": True,
-        "salesStage": "won",
-        "value": 9600,
-        "priority": "high",
-        "lastContact": "2026-05-09",
-        "nextFollowUp": "2026-05-20",
-        "nextAction": "Prep kickoff agenda",
-        "notes": "Signed. Kickoff booked for next week. Retainer plus messaging workshop.",
-    },
-    {
-        "name": "Sophie Malik",
-        "company": "The Ledger",
-        "email": "sophie@theledger.co.uk",
-        "phone": "",
-        "source": "Twitter",
-        "relationshipType": "journalist",
-        "relationshipStatus": "warm",
-        "isSales": False,
-        "salesStage": "",
-        "value": 0,
-        "priority": "medium",
-        "lastContact": "2026-05-01",
-        "nextFollowUp": "2026-05-14",
-        "nextAction": "Send a clean angle on AI visibility for founders",
-        "notes": "Covers B2B software and founder stories. Likes short, useful emails.",
-    },
-    {
-        "name": "Rachel Dunn",
-        "company": "Intro Circle",
-        "email": "rachel@introcircle.com",
-        "phone": "",
-        "source": "Mutual friend",
-        "relationshipType": "referrer",
-        "relationshipStatus": "active",
-        "isSales": False,
-        "salesStage": "",
-        "value": 0,
-        "priority": "high",
-        "lastContact": "2026-05-03",
-        "nextFollowUp": "2026-05-10",
-        "nextAction": "Thank her for last intro and share who is a good fit",
-        "notes": "Consistently introduces founders. Worth staying warm with light updates.",
-    },
-    {
-        "name": "Nate Brooks",
-        "company": "Creator Frequency",
-        "email": "nate@creatorfrequency.fm",
-        "phone": "",
-        "source": "Podcast outreach",
-        "relationshipType": "podcast-guest",
-        "relationshipStatus": "warm",
-        "isSales": False,
-        "salesStage": "",
-        "value": 0,
-        "priority": "medium",
-        "lastContact": "2026-05-02",
-        "nextFollowUp": "2026-05-15",
-        "nextAction": "Confirm talking points and recording date",
-        "notes": "Potential guest swap and referral source later, but not a sales conversation.",
-    },
-]
-
-
 def db_connection() -> sqlite3.Connection:
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -212,10 +88,6 @@ def initialize_database() -> None:
             )
             """
         )
-        count = conn.execute("SELECT COUNT(*) FROM contacts").fetchone()[0]
-        if count == 0:
-            for contact in SAMPLE_CONTACTS:
-                insert_contact(conn, normalize_contact(contact), contact_id=secrets.token_hex(12))
         conn.commit()
 
 
@@ -367,16 +239,6 @@ def delete_contact(contact_id: str) -> bool:
         result = conn.execute("DELETE FROM contacts WHERE id = ?", (contact_id,))
         conn.commit()
         return result.rowcount > 0
-
-
-def reset_sample_data() -> list[dict]:
-    with db_connection() as conn:
-        conn.execute("DELETE FROM contacts")
-        for contact in SAMPLE_CONTACTS:
-            insert_contact(conn, normalize_contact(contact), contact_id=secrets.token_hex(12))
-        conn.commit()
-    return list_contacts()
-
 
 class CRMRequestHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -547,11 +409,6 @@ class CRMRequestHandler(SimpleHTTPRequestHandler):
             payload = self._parse_json_body()
             created = create_contact(payload)
             self._json(HTTPStatus.CREATED, {"contact": created})
-            return
-
-        if parsed.path == "/api/reset-sample":
-            contacts = reset_sample_data()
-            self._json(HTTPStatus.OK, {"contacts": contacts})
             return
 
         self._json(HTTPStatus.NOT_FOUND, {"error": "Not found"})

@@ -1,14 +1,4 @@
 const LEGACY_STORAGE_KEYS = ["simple-crm-records-v2", "simple-crm-records-v1"];
-const SAMPLE_CONTACT_NAMES = [
-  "Maya Chen",
-  "Leo Foster",
-  "Imani Rivers",
-  "Tom Alvarez",
-  "Sophie Malik",
-  "Rachel Dunn",
-  "Nate Brooks",
-];
-
 const state = {
   authenticated: false,
   contacts: [],
@@ -62,7 +52,6 @@ const elements = {
   salesHelpText: document.querySelector("#salesHelpText"),
   resetFormBtn: document.querySelector("#resetFormBtn"),
   newContactBtn: document.querySelector("#newContactBtn"),
-  seedDataBtn: document.querySelector("#seedDataBtn"),
   exportBtn: document.querySelector("#exportBtn"),
   importInput: document.querySelector("#importInput"),
   emptyStateTemplate: document.querySelector("#emptyStateTemplate"),
@@ -86,14 +75,6 @@ function loadLegacyBrowserContacts() {
   }
 
   return [];
-}
-
-function isSampleOnlyDataset(contacts) {
-  if (!contacts.length) {
-    return true;
-  }
-
-  return contacts.every((contact) => SAMPLE_CONTACT_NAMES.includes(contact.name));
 }
 
 function normalizeRecoveryContact(contact) {
@@ -738,7 +719,7 @@ async function maybeRecoverLegacyBrowserData() {
 
   window.sessionStorage.setItem("simple-crm-legacy-recovery-seen", "true");
 
-  const replaceExisting = isSampleOnlyDataset(state.contacts);
+  const replaceExisting = state.contacts.length === 0;
   const message = replaceExisting
     ? "Older browser-only CRM data was found in this browser. The new deployed version reads from the server, so it is not showing automatically. Recover that older data into this account now?"
     : "Older browser-only CRM data was found in this browser. Do you want to import it into the new server-backed CRM now?";
@@ -841,13 +822,6 @@ function bindEvents() {
   elements.relationshipsList.addEventListener("click", handleActionClick);
   elements.resetFormBtn.addEventListener("click", resetForm);
   elements.newContactBtn.addEventListener("click", resetForm);
-
-  elements.seedDataBtn.addEventListener("click", async () => {
-    const payload = await apiRequest("/api/reset-sample", { method: "POST", body: "{}" });
-    state.contacts = payload.contacts;
-    renderAll();
-    resetForm();
-  });
 
   elements.exportBtn.addEventListener("click", exportContacts);
 
