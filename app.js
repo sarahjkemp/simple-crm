@@ -247,13 +247,10 @@ function getFollowUpContacts() {
 
 function buildStats() {
   const salesContacts = getSalesContacts();
-  const opportunityContacts = salesContacts.filter((contact) =>
-    ["watchlist", "lead", "discovery", "proposal", "negotiation"].includes(contact.salesStage)
-  );
   const activePipelineDeals = salesContacts.filter((contact) =>
     ["discovery", "proposal", "negotiation"].includes(contact.salesStage)
   );
-  const totalPotentialValue = opportunityContacts.reduce((sum, contact) => sum + Number(contact.value || 0), 0);
+  const totalPotentialValue = activePipelineDeals.reduce((sum, contact) => sum + Number(contact.value || 0), 0);
   const wonValue = salesContacts
     .filter((contact) => contact.salesStage === "won")
     .reduce((sum, contact) => sum + Number(contact.value || 0), 0);
