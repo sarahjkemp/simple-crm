@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: simple-crm
+    runtime: python
+    plan: starter
+    buildCommand: echo "No build step"
+    startCommand: python3 app.py
+    envVars:
+      - key: CRM_PASSWORD
+        sync: false
+      - key: CRM_DATA_DIR
+        value: /var/data
+    disk:
+      name: crm-data
+      mountPath: /var/data
+      sizeGB: 1

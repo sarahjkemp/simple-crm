@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simple CRM</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Source+Sans+3:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="authShell" class="auth-shell">
+      <section class="auth-card">
+        <p class="eyebrow">Private CRM</p>
+        <h1>Sign in to your CRM.</h1>
+        <p class="hero-copy">
+          This version syncs through the server, so your contacts travel with you.
+        </p>
+        <form id="loginForm" class="contact-form auth-form">
+          <label>
+            Password
+            <input id="passwordInput" type="password" autocomplete="current-password" required />
+          </label>
+          <p id="loginError" class="error-text" hidden></p>
+          <button type="submit" class="primary-button">Unlock CRM</button>
+        </form>
+      </section>
+    </div>
+
+    <div class="app-shell" hidden>
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Simple CRM</p>
+          <h1>See revenue potential without drowning in every conversation.</h1>
+          <p class="hero-copy">
+            Keep sales in a real pipeline, keep journalists and referrers separate,
+            and let your follow-up list tell you what matters today.
+          </p>
+        </div>
+        <div class="hero-actions">
+          <button id="logoutBtn" class="ghost-button">Log out</button>
+          <button id="seedDataBtn" class="ghost-button">Reload sample data</button>
+          <button id="exportBtn" class="secondary-button">Export JSON</button>
+          <label class="secondary-button file-label" for="importInput">Import JSON</label>
+          <input id="importInput" type="file" accept="application/json" hidden />
+        </div>
+      </header>
+
+      <main class="dashboard">
+        <section class="stats-grid" id="statsGrid"></section>
+
+        <section class="pipeline-layout">
+          <section class="panel">
+            <div class="panel-block">
+              <div class="section-heading">
+                <div>
+                  <p class="eyebrow">Focus</p>
+                  <h2>Today</h2>
+                </div>
+              </div>
+              <div id="todayList" class="task-list"></div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-block">
+              <div class="section-heading">
+                <div>
+                  <p class="eyebrow">Relationships</p>
+                  <h2>Non-sales network</h2>
+                </div>
+              </div>
+              <div id="relationshipsList" class="relationship-list"></div>
+            </div>
+          </section>
+        </section>
+
+        <section class="panel two-column">
+          <div class="panel-block">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Directory</p>
+                <h2>All contacts</h2>
+              </div>
+              <button id="newContactBtn" class="primary-button">New contact</button>
+            </div>
+
+            <div class="toolbar toolbar-wide">
+              <input id="searchInput" type="search" placeholder="Search name, company, notes, next step..." />
+              <select id="focusFilter">
+                <option value="all">All contacts</option>
+                <option value="sales">Sales only</option>
+                <option value="relationships">Relationships only</option>
+              </select>
+              <select id="typeFilter">
+                <option value="all">All relationship types</option>
+              </select>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Company</th>
+                    <th>Type</th>
+                    <th>Stage / warmth</th>
+                    <th>Value</th>
+                    <th>Next follow-up</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="contactsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <aside class="panel-block detail-panel">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Editor</p>
+                <h2 id="formTitle">Add contact</h2>
+              </div>
+            </div>
+
+            <form id="contactForm" class="contact-form">
+              <input type="hidden" id="contactId" name="id" />
+              <label>
+                Name
+                <input id="nameInput" name="name" required />
+              </label>
+              <label>
+                Company
+                <input id="companyInput" name="company" />
+              </label>
+              <label>
+                Email
+                <input id="emailInput" name="email" type="email" />
+              </label>
+              <label>
+                Phone
+                <input id="phoneInput" name="phone" />
+              </label>
+              <label>
+                Relationship type
+                <select id="relationshipTypeInput" name="relationshipType"></select>
+              </label>
+              <label>
+                Relationship warmth
+                <select id="relationshipStatusInput" name="relationshipStatus"></select>
+              </label>
+              <label>
+                Lead source / context
+                <input id="sourceInput" name="source" placeholder="Referral, LinkedIn, website, intro..." />
+              </label>
+              <label class="checkbox-row">
+                <input id="salesTrackInput" type="checkbox" />
+                <span>Track this person in the sales pipeline</span>
+              </label>
+              <p id="salesHelpText" class="helper-text"></p>
+
+              <div id="salesFields" class="sales-fields">
+                <label>
+                  Sales stage
+                  <select id="salesStageInput" name="salesStage"></select>
+                </label>
+                <label>
+                  Estimated deal value
+                  <input id="valueInput" name="value" type="number" min="0" step="100" />
+                </label>
+              </div>
+
+              <label>
+                Priority
+                <select id="priorityInput" name="priority"></select>
+              </label>
+              <label>
+                Last contact
+                <input id="lastContactInput" name="lastContact" type="date" />
+              </label>
+              <label>
+                Next follow-up
+                <input id="nextFollowUpInput" name="nextFollowUp" type="date" />
+              </label>
+              <label>
+                Next action
+                <input id="nextActionInput" name="nextAction" placeholder="What exactly needs to happen next?" />
+              </label>
+              <label>
+                Notes
+                <textarea id="notesInput" name="notes" rows="5" placeholder="Key context, personal details, objections, angles, next steps..."></textarea>
+              </label>
+              <div class="form-actions">
+                <button type="submit" class="primary-button">Save contact</button>
+                <button type="button" id="resetFormBtn" class="ghost-button">Clear</button>
+              </div>
+            </form>
+          </aside>
+        </section>
+
+        <section class="panel">
+          <div class="panel-block">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Pipeline</p>
+                <h2>Sales pipeline</h2>
+              </div>
+            </div>
+            <div id="pipelineBoard" class="pipeline-board"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <template id="emptyStateTemplate">
+      <div class="empty-state">
+        <p>Nothing here yet.</p>
+      </div>
+    </template>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
