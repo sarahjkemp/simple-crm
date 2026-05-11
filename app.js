@@ -1,3 +1,14 @@
+const LEGACY_STORAGE_KEYS = ["simple-crm-records-v2", "simple-crm-records-v1"];
+const SAMPLE_CONTACT_NAMES = [
+  "Maya Chen",
+  "Leo Foster",
+  "Imani Rivers",
+  "Tom Alvarez",
+  "Sophie Malik",
+  "Rachel Dunn",
+  "Nate Brooks",
+];
+
 const state = {
   authenticated: false,
   contacts: [],
@@ -56,6 +67,74 @@ const elements = {
   importInput: document.querySelector("#importInput"),
   emptyStateTemplate: document.querySelector("#emptyStateTemplate"),
 };
+
+function loadLegacyBrowserContacts() {
+  for (const key of LEGACY_STORAGE_KEYS) {
+    try {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) {
+        continue;
+      }
+
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length) {
+        return parsed;
+      }
+    } catch (error) {
+      console.error(`Unable to read legacy browser data from ${key}`, error);
+    }
+  }
+
+  return [];
+}
+
+function isSampleOnlyDataset(contacts) {
+  if (!contacts.length) {
+    return true;
+  }
+
+  return contacts.every((contact) => SAMPLE_CONTACT_NAMES.includes(contact.name));
+}
+
+function normalizeRecoveryContact(contact) {
+  if (contact.relationshipType) {
+    return {
+      name: contact.name || "",
+      company: contact.company || "",
+      email: contact.email || "",
+      phone: contact.phone || "",
+      source: contact.source || "",
+      relationshipType: contact.relationshipType || "partner",
+      relationshipStatus: contact.relationshipStatus || "warm",
+      isSales: Boolean(contact.isSales),
+      salesStage: contact.salesStage || "",
+      value: Number(contact.value || 0),
+      priority: contact.priority || "medium",
+      lastContact: contact.lastContact || "",
+      nextFollowUp: contact.nextFollowUp || "",
+      nextAction: contact.nextAction || "",
+      notes: contact.notes || "",
+    };
+  }
+
+  return {
+    name: contact.name || "",
+    company: contact.company || "",
+    email: contact.email || "",
+    phone: contact.phone || "",
+    source: contact.source || "",
+    relationshipType: "prospect",
+    relationshipStatus: "warm",
+    isSales: true,
+    salesStage: contact.status || "watchlist",
+    value: Number(contact.value || 0),
+    priority: "medium",
+    lastContact: contact.lastContact || "",
+    nextFollowUp: contact.nextFollowUp || "",
+    nextAction: contact.nextAction || "",
+    notes: contact.notes || "",
+  };
+}
 
 async function apiRequest(path, options = {}) {
   const response = await fetch(path, {
@@ -507,6 +586,7 @@ async function bootstrapApp() {
   renderSelectOptions();
   resetForm();
   renderAll();
+  await maybeRecoverLegacyBrowserData();
 }
 
 async function saveContact() {
@@ -626,6 +706,49 @@ async function importContacts(file) {
 
   await refreshContacts();
   resetForm();
+}
+
+async function importContactsArray(contacts, { replaceExisting = false } = {}) {
+  if (replaceExisting) {
+    for (const existing of [...state.contacts]) {
+      await apiRequest(`/api/contacts/${existing.id}`, { method: "DELETE" });
+    }
+  }
+
+  for (const contact of contacts) {
+    await apiRequest("/api/contacts", {
+      method: "POST",
+      body: JSON.stringify(normalizeRecoveryContact(contact)),
+    });
+  }
+
+  await refreshContacts();
+  resetForm();
+}
+
+async function maybeRecoverLegacyBrowserData() {
+  const legacyContacts = loadLegacyBrowserContacts();
+  if (!legacyContacts.length) {
+    return;
+  }
+
+  if (window.sessionStorage.getItem("simple-crm-legacy-recovery-seen") === "true") {
+    return;
+  }
+
+  window.sessionStorage.setItem("simple-crm-legacy-recovery-seen", "true");
+
+  const replaceExisting = isSampleOnlyDataset(state.contacts);
+  const message = replaceExisting
+    ? "Older browser-only CRM data was found in this browser. The new deployed version reads from the server, so it is not showing automatically. Recover that older data into this account now?"
+    : "Older browser-only CRM data was found in this browser. Do you want to import it into the new server-backed CRM now?";
+
+  if (!window.confirm(message)) {
+    return;
+  }
+
+  await importContactsArray(legacyContacts, { replaceExisting });
+  window.alert("Your older browser data has been imported into the live CRM.");
 }
 
 async function handleActionClick(event) {
