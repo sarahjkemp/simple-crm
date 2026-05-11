@@ -6,6 +6,7 @@ import os
 import secrets
 import sqlite3
 import threading
+from datetime import date
 from http import HTTPStatus
 from http.cookies import SimpleCookie
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
